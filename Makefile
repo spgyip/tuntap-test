@@ -1,8 +1,8 @@
 
-all: main
+all: tun-client
 
-main: main.c
-	gcc $^ -o $@
+tun-client: tun-client.c
+	gcc -std=c99 -lpthread $^ -o $@
 
 clean:
-	rm -fv main
+	rm -fv tun-client
