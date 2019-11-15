@@ -7,13 +7,13 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define c2h(c) ((c)<=9?('0'+(c)):('a'+(c)-10))
 
@@ -70,11 +70,11 @@ void dumphex(char *buf, int size) {
     free(output);
 }
 
-/* UDP server fd
- * UDP server address
+/* UDP remote fd
+ * UDP remote address
  */ 
-int sfd = 0;
-struct sockaddr_in saddr;
+int rfd = 0;
+struct sockaddr_in raddr;
 
 /* TUN device fd
  */
@@ -90,9 +90,9 @@ void* routine_forward(void *arg) {
             printf("[routine_forward] read error from tun: %s\n", strerror(errno));
             continue;
         }
-        printf("[routine_forward] Read %d bytes from tun\n", bytes);
+        printf("[routine_forward] Read %lu bytes from tun\n", bytes);
         dumphex(buf, bytes);
-        sendto(sfd, buf, bytes, 0, (struct sockaddr *)&saddr, sizeof(saddr));
+        sendto(rfd, buf, bytes, 0, (struct sockaddr *)&raddr, sizeof(raddr));
     }
 }
 
@@ -105,12 +105,12 @@ void* routine_backward(void *arg) {
     struct sockaddr_in addr;
     socklen_t len;
     for(;;) {
-        bytes = recvfrom(sfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &len);
+        bytes = recvfrom(rfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &len);
         if(bytes<0) {
             printf("[routine_backward] Recvfrom error\n");
             continue;
         }
-        printf("[routine_forward] Read %d bytes from UDP\n", bytes);
+        printf("[routine_backward] Read %lu bytes from UDP\n", bytes);
         dumphex(buf, bytes);
         write(tfd, buf, bytes);
     }
@@ -118,7 +118,7 @@ void* routine_backward(void *arg) {
 
 int main(int argc, char* argv[]) {
     if(argc<3) {
-        printf("Usage: %s [tun name] [server ip]\n", argv[0]);
+        printf("Usage: %s [if name] [server ip]\n", argv[0]);
         return 1;
     }
 
@@ -127,8 +127,8 @@ int main(int argc, char* argv[]) {
     
     // 1. Create UDP tunnel
     // 1.1 socket
-    sfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if(sfd<0) {
+    rfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if(rfd<0) {
         printf("Create socket error\n");
         return 2;
     }
@@ -138,19 +138,19 @@ int main(int argc, char* argv[]) {
     bind_addr.sin_family = AF_INET;
     bind_addr.sin_port = htons(5001);
     bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    if(bind(sfd, (struct sockaddr *)&bind_addr, sizeof(bind_addr))<0) {
+    if(bind(rfd, (struct sockaddr *)&bind_addr, sizeof(bind_addr))<0) {
         printf("Bind socket error\n");
         return 2;
     }
     
-    // 1.3 server address
-    saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(5001);
-    inet_aton(server_ip, &saddr.sin_addr);
+    // 1.3 remote address
+    raddr.sin_family = AF_INET;
+    raddr.sin_port = htons(5001);
+    inet_aton(server_ip, &raddr.sin_addr);
 
-    printf("Create udp socket success, fd %d\n", sfd);
+    printf("Create udp socket success, fd %d\n", rfd);
 
-    // Create tun
+    // 1.4 Create tun
     tfd = tun_alloc(TYPE_TUN, tun_name);
     if(tfd<0) {
         printf("tun_alloc fail\n");

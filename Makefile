@@ -1,8 +1,8 @@
 
-all: tun-client
+all: xtun
 
-tun-client: tun-client.c
-	gcc -std=c99 -lpthread $^ -o $@
+xtun: xtun.c
+	gcc -Wall -std=gnu99 -lpthread $^ -o $@
 
 clean:
-	rm -fv tun-client
+	rm -fv xtun
