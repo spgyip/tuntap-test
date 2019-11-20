@@ -25,9 +25,9 @@ Demo tun/tap device
 
 ```
 
-We have 2 nodes having ip `10.10.10.14` and `10.10.10.15`. On each we run `xtun` which create a `tun` device named `tun0`. Then we configure `tun0` on `10.10.10.14` with ip `192.168.0.1` with destination `192.168.0.2`, and on `10.10.10.15` with ip `192.168.0.2` with destination `192.168.0.1`. Finishing these, we have create 2 `point to point` interface on 2 nodes, `xtun` will read all data flow from `tun0` and forward to the other node with UDP tunnel, on reading data flow from UDP tunnel, the other node would write raw data to `tun0` too. All the following data flow will be control by kernel protocol stack.
+Having 2 nodes with ip `10.10.10.14` and `10.10.10.15`. On each node we run an `xtun` which creates a `tun` device named `tun0`. Then we configure `tun0` on `10.10.10.14` with ip `192.168.0.1` and destination `192.168.0.2`, and on `10.10.10.15` with ip `192.168.0.2` and destination `192.168.0.1`. Now, we have created 2 `point to point` interface on 2 nodes, `xtun` will read all data flow from `tun0` and forward to the other node with UDP tunnel, on reading data flow from UDP tunnel, the other node would write raw data to `tun0` too. Then, all following data flow will be controled by the kernel protocol stack.
 
-In order to demonstrate a full `Virtual private network` situation, we create a `test-dev` interface on `10.10.10.15` with ip `172.0.0.1/24`. On `10.10.10.14` we route all trafic with destination to `172.0.0.0/8` to `tun0`. 
+In order to demonstrate a complete `VPN(Virtual private network)` situation, we create a `test-dev` interface on `10.10.10.15` with ip `172.0.0.1/24`. On `10.10.10.14` we route all trafic with destination to `172.0.0.0/8` to `tun0`. 
 
 Then what it is? You can visit `172.0.0.1` on `10.10.10.14` just like you are in the same private network with `172.0.0.1`.
 
