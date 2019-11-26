@@ -56,7 +56,7 @@ ifconfig tun0 192.168.0.2 pointopoint 192.168.0.1 mtu 1500
 
 ## Add link and configure as 172.0.0.1/24
 ip link add test-dev type bridge
-ifconfig test 172.0.0.1 netmask 255.255.255.0
+ifconfig test-dev 172.0.0.1 netmask 255.255.255.0
 ```
 
 3. Test with `nc`
